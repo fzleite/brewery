@@ -1,25 +1,31 @@
 {
-  "name": "brewery",
-  "version": "1.0.0",
-  "description": "Brewery",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/fzleite/brewery.git"
-  },
-  "keywords": [
-    "brewery"
-  ],
-  "author": "Fernando Zimmermann Leite",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/fzleite/brewery/issues"
-  },
-  "homepage": "https://github.com/fzleite/brewery#readme",
-  "dependencies": {
-    "express": "^4.17.1"
-  }
+    "name": "brewery",
+    "version": "1.0.0",
+    "description": "Brewery",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "nodemon ./index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/fzleite/brewery.git"
+    },
+    "keywords": [
+        "brewery"
+    ],
+    "author": "Fernando Zimmermann Leite",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/fzleite/brewery/issues"
+    },
+    "homepage": "https://github.com/fzleite/brewery#readme",
+    "dependencies": {
+        "express": "^4.17.1",
+        "socket-io": "^1.0.0"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.4"
+    }
 }
