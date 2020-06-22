@@ -2,7 +2,7 @@ export default function brewGraph(graphConf) {
     if (!graphConf) graphConf = {};
 
     const graphInfo = {
-        width: graphConf.width || 600,
+        width: graphConf.width || 1200,
         height: graphConf.height || 600,
         backgroundColor: 'rgba(255,255,255,0)',
         axisLineColor: 'black',
@@ -16,30 +16,41 @@ export default function brewGraph(graphConf) {
         legendTitle: 'Legenda:',
         legendFont: 'bold 16px Arial',
         legendItemFont: '14px Arial',
+        dataLabelFont: '14px Arial',
+        heatingTitle: 'Mudança de rampa',
+        heatingColor: 'rgba(100,100,100,0.3)',
         steps: [
             {
                 step: 'Liberação Enzimática',
                 temperature: 55,
                 time: 30,
                 timeToAchieve: 10,
-                color: 'rgba(0,200,0,1)',
-                colorAlpha: 'rgba(0,200,0,5)',
+                color: 'rgba(0,240,0,1)',
+                colorAlpha: 'rgba(0,240,0,0.2)',
             },
             {
                 step: 'Liberação Proteica',
                 temperature: 68,
                 time: 30,
                 timeToAchieve: 10,
-                color: 'rgba(200,0,0,1)',
-                colorAlpha: 'rgba(200,0,0,5)',
+                color: 'rgba(0,180,0,1)',
+                colorAlpha: 'rgba(0,180,0,0.2)',
+            },
+            {
+                step: 'Liberação Proteica2',
+                temperature: 70,
+                time: 30,
+                timeToAchieve: 15,
+                color: 'rgba(0,130,0,1)',
+                colorAlpha: 'rgba(0,130,0,0.2)',
             },
             {
                 step: 'Mash-out',
-                temperature: 87,
+                temperature: 78,
                 time: 15,
                 timeToAchieve: 10,
-                color: 'rgba(0,0,200,1)',
-                colorAlpha: 'rgba(0,0,200,5)',
+                color: 'rgba(200,0,0,1)',
+                colorAlpha: 'rgba(2000,0,0,0.2)',
             },
         ],
         context: null,
@@ -119,7 +130,7 @@ export default function brewGraph(graphConf) {
         ctx.font = graphInfo.axisLabelFont;
         ctx.fillStyle = graphInfo.axisLabelColor;
         ctx.textAlign = 'center';
-        ctx.fillText(graphInfo.axisXLabel, w / 2, h - borderY / 2);
+        ctx.fillText(graphInfo.axisXLabel + ` - ETM (Estimated Time to Mash)=${getTotalTime()}m`, w / 2, h - borderY / 2);
 
         // Draw the Y axis
         ctx.lineWidth = 2;
@@ -179,10 +190,68 @@ export default function brewGraph(graphConf) {
     const drawData = (w, h) => {
         let cnv = document.createElement('canvas');
         let ctx = cnv.getContext('2d');
+        cnv.width = graphInfo.width;
+        cnv.height = graphInfo.height;
+        let pw = w / getTotalTime(); //percentage of width
+        let ph = h / 100; // percentage of height
 
-        console.log(getTotalTime());
-        console.log(w);
-        console.log(h);
+        let lastTime = 0;
+        let lastTemp = 0;
+
+        graphInfo.steps.forEach((step) => {
+            // Time to achieve
+            ctx.beginPath();
+            ctx.moveTo(lastTime, h);
+            ctx.lineTo(lastTime + step.timeToAchieve * pw, h);
+            ctx.lineTo(
+                lastTime + step.timeToAchieve * pw,
+                h - step.temperature * ph
+            );
+            ctx.lineTo(lastTime, h - lastTemp * ph);
+            ctx.closePath();
+            ctx.fillStyle = graphInfo.heatingColor;
+            ctx.fill();
+
+            //Draw label
+            ctx.font = graphInfo.dataLabelFont;
+            ctx.fillStyle = graphInfo.axisLabelColor;
+            ctx.textAlign = 'center';
+            ctx.fillText(
+                '(t=' + step.timeToAchieve + 'm)',
+                lastTime + step.timeToAchieve * pw - (step.timeToAchieve * pw / 2),
+                h - step.temperature * ph
+            );
+
+
+            lastTime += step.timeToAchieve * pw;
+
+            // Draw step
+            ctx.beginPath();
+            ctx.moveTo(lastTime, h);
+            ctx.lineTo(lastTime + step.time * pw, h);
+            ctx.lineTo(lastTime + step.time * pw, h - step.temperature * ph);
+            ctx.lineTo(lastTime, h - step.temperature * ph);
+            ctx.closePath();
+            ctx.fillStyle = step.colorAlpha;
+            ctx.fill();
+
+            //Draw label
+            ctx.font = graphInfo.dataLabelFont;
+            ctx.fillStyle = graphInfo.axisLabelColor;
+            ctx.textAlign = 'center';
+            ctx.fillText(
+                step.temperature + '°',
+                lastTime + step.time * pw - (step.time * pw / 2),
+                h - step.temperature * ph - 10
+            );
+
+            lastTime += step.time * pw;
+            lastTemp = step.temperature;
+        });
+
+        return {
+            image: ctx.getImageData(0, 0, w, h),
+        };
     };
 
     /**
@@ -217,6 +286,19 @@ export default function brewGraph(graphConf) {
             beginH += space;
         });
 
+        // Draw the mark to Heating time
+        ctx.fillStyle = graphInfo.heatingColor;
+        ctx.fillRect(0, beginH + 5, markSize, space - 5);
+        ctx.stroke();
+
+        // Draw the mark's description
+        ctx.font = graphInfo.legendItemFont;
+        ctx.fillStyle = graphInfo.axisLabelColor;
+        ctx.textAlign = 'left';
+        ctx.fillText(graphInfo.heatingTitle, markSize + 10, beginH + 18);
+
+        beginH += space;
+
         return {
             width: cnv.width,
             height: beginH,
@@ -242,7 +324,8 @@ export default function brewGraph(graphConf) {
         ctx.putImageData(legend.image, 50, 400);
 
         // Draw the data
-        drawData(header.dataW, header.dataH);
+        let data = drawData(header.dataW - 15, header.dataH - 12);
+        ctx.putImageData(data.image, header.dataX, header.dataY + 10);
     };
 
     return {
