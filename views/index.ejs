@@ -1,26 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=400, initial-scale=1.0" />
-        <title>Brewery</title>
-        <style>
-            #mash {
-                border: 10px solid #CCC;
-                image-rendering: crisp-edges;
-                image-rendering: -moz-crisp-edges;
-            }
-        </style>
-    </head>
-    <body>
-        <canvas id="mash"></canvas>
-        <script type="module" src=˜./js/brewGraph.js˜></script>
-        <script type="module">
-            import brewGraph from './js/brewGraph.js';
 
-            let mash = new brewGraph();
-            mash.setContext(document.getElementById("mash"));
-            mash.draw();
-        </script>
-    </body>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=400, initial-scale=1.0" />
+    <title>Brewery</title>
+    <style>
+        #mash {
+            border: 10px solid #CCC;
+            image-rendering: crisp-edges;
+            image-rendering: -moz-crisp-edges;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="mash"></canvas>
+    <script type="module" src=˜./js/brewGraph.js˜></script>
+    <script type="module">
+        import brewGraph from './js/brewGraph.js';
+
+        let mash = new brewGraph({
+            title: 'Nome da Cerveja',
+            titleColor: 'black',
+            width: 1000,
+            steps: [
+                {
+                    step: 'Liberação Enzimática',
+                    temperature: 55,
+                    time: 30,
+                    timeToAchieve: 10,
+                    color: 'rgba(0,240,0,1)',
+                    colorAlpha: 'rgba(0,240,0,0.2)',
+                },
+                {
+                    step: 'Liberação Proteica',
+                    temperature: 68,
+                    time: 30,
+                    timeToAchieve: 10,
+                    color: 'rgba(0,180,0,1)',
+                    colorAlpha: 'rgba(0,180,0,0.2)',
+                },
+                {
+                    step: 'Mash-out',
+                    temperature: 78,
+                    time: 15,
+                    timeToAchieve: 10,
+                    color: 'rgba(200,0,0,1)',
+                    colorAlpha: 'rgba(2000,0,0,0.2)',
+                },
+            ]
+        });
+        mash.setContext(document.getElementById("mash"));
+        mash.draw();
+
+    </script>
+</body>
+
 </html>

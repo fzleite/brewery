@@ -2,60 +2,29 @@ export default function brewGraph(graphConf) {
     if (!graphConf) graphConf = {};
 
     const graphInfo = {
-        width: graphConf.width || 1200,
+        width: graphConf.width || 800,
         height: graphConf.height || 600,
-        backgroundColor: 'rgba(255,255,255,0)',
-        axisLineColor: 'black',
-        title: 'Mash Graph',
-        titleColor: 'blue',
-        titleFont: 'bold 20px Arial',
-        axisXLabel: 'Tempo (t)',
-        axisYLabel: 'Temperatura (c)',
-        axisLabelColor: 'black',
-        axisLabelFont: 'italic 16px Arial',
-        legendTitle: 'Legenda:',
-        legendFont: 'bold 16px Arial',
-        legendItemFont: '14px Arial',
-        dataLabelFont: '14px Arial',
-        heatingTitle: 'Mudança de rampa',
-        heatingColor: 'rgba(100,100,100,0.3)',
-        steps: [
-            {
-                step: 'Liberação Enzimática',
-                temperature: 55,
-                time: 30,
-                timeToAchieve: 10,
-                color: 'rgba(0,240,0,1)',
-                colorAlpha: 'rgba(0,240,0,0.2)',
-            },
-            {
-                step: 'Liberação Proteica',
-                temperature: 68,
-                time: 30,
-                timeToAchieve: 10,
-                color: 'rgba(0,180,0,1)',
-                colorAlpha: 'rgba(0,180,0,0.2)',
-            },
-            {
-                step: 'Liberação Proteica2',
-                temperature: 70,
-                time: 30,
-                timeToAchieve: 15,
-                color: 'rgba(0,130,0,1)',
-                colorAlpha: 'rgba(0,130,0,0.2)',
-            },
-            {
-                step: 'Mash-out',
-                temperature: 78,
-                time: 15,
-                timeToAchieve: 10,
-                color: 'rgba(200,0,0,1)',
-                colorAlpha: 'rgba(2000,0,0,0.2)',
-            },
-        ],
+        backgroundColor: graphConf.backgroundColor || 'rgba(255,255,255,0)',
+        axisLineColor: graphConf.axisLineColor || 'black',
+        title: graphConf.title || 'Mash Graph',
+        titleColor: graphConf.titleColor || 'blue',
+        titleFont: graphConf.titleFont || 'bold 20px Arial',
+        axisXLabel: graphConf.axisXLabel || 'Tempo (t)',
+        axisYLabel: graphConf.axisYLabel || 'Temperatura (c)',
+        axisLabelColor: graphConf.axisLabelColor || 'black',
+        axisLabelFont: graphConf.axisLabelFont || 'italic 16px Arial',
+        legendTitle: graphConf.legendTitle || 'Legenda:',
+        legendFont: graphConf.legendFont || 'bold 16px Arial',
+        legendItemFont: graphConf.legendItemFont || '14px Arial',
+        dataLabelFont: graphConf.dataLabelFont || '14px Arial',
+        heatingTitle: graphConf.heatingTitle || 'Mudança de rampa',
+        heatingColor: graphConf.heatingColor || 'rgba(100,100,100,0.3)',
+        steps: graphConf.steps,
         context: null,
         canvas: null,
     };
+
+    console.log(graphInfo);
 
     const setContext = (context) => {
         graphInfo.canvas = context;
@@ -332,5 +301,6 @@ export default function brewGraph(graphConf) {
         setContext,
         addStep,
         draw,
+        graphInfo
     };
 }
