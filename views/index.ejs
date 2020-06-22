@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=400, initial-scale=1.0" />
+        <title>Brewery</title>
+        <style>
+            #mash {
+                border: 10px solid #CCC;
+                image-rendering: crisp-edges;
+                image-rendering: -moz-crisp-edges;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="mash"></canvas>
+        <script type="module" src=˜./js/brewGraph.js˜></script>
+        <script type="module">
+            import brewGraph from './js/brewGraph.js';
+
+            let mash = new brewGraph();
+            mash.setContext(document.getElementById("mash"));
+            mash.draw();
+        </script>
+    </body>
+</html>
