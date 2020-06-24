@@ -7,7 +7,6 @@
     <title>Brewery</title>
     <style>
         #mash {
-            border: 10px solid #CCC;
             image-rendering: crisp-edges;
             image-rendering: -moz-crisp-edges;
         }
@@ -21,38 +20,74 @@
         import brewGraph from './js/brewGraph.js';
 
         let mash = new brewGraph({
-            title: 'Nome da Cerveja',
-            titleColor: 'black',
-            width: 1000,
-            steps: [
-                {
-                    step: 'Liberação Enzimática',
-                    temperature: 55,
-                    time: 30,
-                    timeToAchieve: 10,
-                    color: 'rgba(0,240,0,1)',
-                    colorAlpha: 'rgba(0,240,0,0.2)',
-                },
-                {
-                    step: 'Liberação Proteica',
-                    temperature: 68,
-                    time: 30,
-                    timeToAchieve: 10,
-                    color: 'rgba(0,180,0,1)',
-                    colorAlpha: 'rgba(0,180,0,0.2)',
-                },
-                {
-                    step: 'Mash-out',
-                    temperature: 78,
-                    time: 15,
-                    timeToAchieve: 10,
-                    color: 'rgba(200,0,0,1)',
-                    colorAlpha: 'rgba(2000,0,0,0.2)',
-                },
-            ]
+            title: 'BREJA DO TIAGO QUE NAO SAI',
+            width: 1200,
+            heatingReasonDPM: "2:1",
+            theme: {
+                backgroundColor: 'white',
+                plotAreaBackgroundColor: 'rgba(200,255,255,0.1)',
+                titleColor: 'black',
+            },
+            plan: {
+                mash: [
+                    {
+                        step: 'Liberação Enzimática',
+                        temperature: 55,
+                        time: 30,
+                        addWater: true,
+                        addGrain: true,
+                    },
+                    {
+                        step: 'Liberação Proteica',
+                        temperature: 68,
+                        time: 30,
+                    },
+                    {
+                        step: 'Mash-out',
+                        temperature: 78,
+                        time: 15,
+                        addWater: true,
+                        addHop: true,
+                        addSpice: true,
+                        addGrain: true,
+                    },
+                ],
+                boiling : {
+                    temperature : 100,
+                    time : 60,
+                    addWater:true,
+                    addSpice:true,
+                    addGrain:true,
+                    hopping : [
+                        {
+                            hopName : 'Cascade',
+                            type : 'Bitternes',
+                            time : 5,
+                            amountMg : 15,
+                        },
+                        {
+                            hopName : 'Cascade',
+                            type : 'FLavor',
+                            time : 45,
+                            amountMg : 15,
+                        },
+                        {
+                            hopName : 'Simcoe',
+                            type : 'FLavor',
+                            time : 55,
+                            amountMg : 15,
+                        },
+                    ],
+                }
+            },
         });
-        mash.setContext(document.getElementById("mash"));
-        mash.draw();
+
+        document.onreadystatechange = (state) => {
+            if(document.readyState == 'complete'){
+                mash.setContext(document.getElementById("mash"));
+                mash.draw();
+            }
+        }
 
     </script>
 </body>
