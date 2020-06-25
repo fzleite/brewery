@@ -22,36 +22,40 @@
         let mash = new brewGraph({
             title: 'BREJA DO TIAGO QUE NAO SAI',
             width: 1200,
-            heatingReasonDPM: "2:1",
+            heatingReasonDPM_UP: "2:1",
+            heatingReasonDPM_DOWN: "1:5",
             theme: {
                 backgroundColor: 'white',
                 plotAreaBackgroundColor: 'rgba(200,255,255,0.1)',
                 titleColor: 'black',
             },
             plan: {
-                mash: [
-                    {
-                        step: 'Liberação Enzimática',
-                        temperature: 55,
-                        time: 30,
-                        addWater: true,
-                        addGrain: true,
-                    },
-                    {
-                        step: 'Liberação Proteica',
-                        temperature: 68,
-                        time: 30,
-                    },
-                    {
-                        step: 'Mash-out',
-                        temperature: 78,
-                        time: 15,
-                        addWater: true,
-                        addHop: true,
-                        addSpice: true,
-                        addGrain: true,
-                    },
-                ],
+                mash: {
+                    type: 'single',
+                    ramps:[
+                        {
+                            step: 'Liberação Enzimática',
+                            temperature: 55,
+                            time: 30,
+                            addWater: true,
+                            addGrain: true,
+                        },
+                        {
+                            step: 'Liberação Proteica',
+                            temperature: 68,
+                            time: 30,
+                        },
+                        {
+                            step: 'Mash-out',
+                            temperature: 78,
+                            time: 15,
+                            addWater: true,
+                            addHop: true,
+                            addSpice: true,
+                            addGrain: true,
+                        },
+                    ],
+                },
                 boiling : {
                     temperature : 100,
                     time : 60,
@@ -73,6 +77,12 @@
                         },
                         {
                             hopName : 'Simcoe',
+                            type : 'FLavor',
+                            time : 50,
+                            amountMg : 15,
+                        },
+                        {
+                            hopName : 'Amarilo',
                             type : 'FLavor',
                             time : 55,
                             amountMg : 15,

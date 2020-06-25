@@ -36,7 +36,7 @@ export default function brewGraph(params) {
         dataLabelFontL1: params.theme.dataLabelFontL1 || '18px Arial',
         dataLabelFontL2: params.theme.dataLabelFontL2 || '14px Arial',
         dataLabelFontL3: params.theme.dataLabelFontL3 || '12px Arial',
-        heatingColor: params.theme.heatingColor || 'rgba(100,100,100,0.1)',
+        heatingColor: params.theme.heatingColor || 'rgba(100,100,100,0.2)',
         mashColors: params.theme.mashColors || [
             {
                 color: 'rgba(175,238,238,1)',
@@ -50,9 +50,13 @@ export default function brewGraph(params) {
                 color: 'rgba(64,224,208,1)',
                 colorAlpha: 'rgba(64,224,208,0.5)',
             },
+            {
+                color: 'rgba(20,224,208,1)',
+                colorAlpha: 'rgba(20,224,208,0.5)',
+            },
         ],
-        boilingColorAlpha: params.theme.boilingColor || 'rgba(255,100,100,0.4)',
-        boilingColor: params.theme.boilingColor || 'rgba(255,100,100,0)',
+        boilingColorAlpha: params.theme.boilingColor || 'rgba(255,10,10,0.4)',
+        boilingColor: params.theme.boilingColor || 'rgba(255,10,10,0.4)',
     };
 
     /**
@@ -65,7 +69,8 @@ export default function brewGraph(params) {
         legendTitle: params.legendTitle || 'Legenda:',
         heatingTitle: params.heatingTitle || 'Mudança de rampa',
         initialTemperature: params.initialTemperature || 20,
-        heatingReasonDPM: params.heatingReasonDPM || '1:1',
+        heatingReasonDPM_UP: params.heatingReasonDPM_UP || '2:1',
+        heatingReasonDPM_DOWN: params.heatingReasonDPM_UP || '1:5',
         width: params.width || 800,
         height: params.height || 600,
         theme: defaultTheme,
@@ -89,11 +94,13 @@ export default function brewGraph(params) {
      * Add a new individual step
      */
     const addMash = (MashInfo) => {
-        if (!MashInfo) throw new BrewException('Mash info is mandatory. See the documentation');
-        if (!typeof MashInfo == 'Array') throw new BrewException('Please inform Mash steps in an Array');
+        if (!MashInfo) throw new BrewException('Mash info [mash] is mandatory. See the documentation');
+        if (!MashInfo.ramps)
+            throw new BrewException('Mash ramps [mash.ramps] info is mandatory. See the documentation');
+        if (!typeof MashInfo.ramps == 'Array') throw new BrewException('Please inform Mash steps in an Array');
 
-        MashInfo.forEach((MashStep) => {
-            if (!MashStep.step) throw new BrewException('Mash step name [step] is mandatory');
+        MashInfo.ramps.forEach((MashStep) => {
+            if (!MashStep.step) throw new BrewException('Mash step name [mash.ramps.step] is mandatory');
             if (!MashStep.time) throw new BrewException('Mash step time [time] is mandatory');
             if (!MashStep.temperature) throw new BrewException('Mash step temperature [temperature] is mandatory');
 
@@ -113,20 +120,21 @@ export default function brewGraph(params) {
     const addBoiling = (BoilingInfo) => {
         if (typeof BoilingInfo != 'undefined') {
             if (!BoilingInfo.step) BoilingInfo.step = 'Boiling';
-            if (!BoilingInfo.time) throw new BrewException('Boiling time [time] is mandatory');
+            if (!BoilingInfo.time) throw new BrewException('Boiling time [boiling.time] is mandatory');
             if (!BoilingInfo.temperature) BoilingInfo.temperature = 100;
 
             if (BoilingInfo.addGrain)
                 if (!typeof BoilingInfo.addGrain == 'boolean')
-                    BrewException('Boiling flag grain is type boolean [addGrain]');
+                    BrewException('Boiling flag grain is type boolean [boiling.addGrain]');
             if (BoilingInfo.addWater)
                 if (!typeof BoilingInfo.addWater == 'boolean')
-                    BrewException('Boiling flag water is type boolean [addWater]');
+                    BrewException('Boiling flag water is type boolean [boiling.addWater]');
             if (BoilingInfo.addSpice)
                 if (!typeof BoilingInfo.addSpice == 'boolean')
-                    BrewException('Boiling flag spice is type boolean [addSpice]');
+                    BrewException('Boiling flag spice is type boolean [boiling.addSpice]');
             if (BoilingInfo.addHop)
-                if (!typeof BoilingInfo.addHop == 'boolean') BrewException('Boiling flag hop is type boolean [addHop]');
+                if (!typeof BoilingInfo.addHop == 'boolean')
+                    BrewException('Boiling flag hop is type boolean [boiling.addHop]');
 
             if (BoilingInfo.hopping) {
                 if (!typeof BoilingInfo.hopping == 'Array')
@@ -134,13 +142,21 @@ export default function brewGraph(params) {
 
                 BoilingInfo.hopping.forEach((hopInfo) => {
                     if (!hopInfo.hopName)
-                        throw new BrewException('Hop name [hopName] is a mandatory in hopping specification');
+                        throw new BrewException(
+                            'Hop name [boiling.hopping.hopName] is a mandatory in hopping specification'
+                        );
                     if (!hopInfo.time)
-                        throw new BrewException('Hop time [time] is a mandatory in hopping specification');
+                        throw new BrewException(
+                            'Hop time [boiling.hopping.time] is a mandatory in hopping specification'
+                        );
                     if (!hopInfo.type)
-                        throw new BrewException('Hop type [type] is a mandatory in hopping specification');
+                        throw new BrewException(
+                            'Hop type [boiling.hopping.type] is a mandatory in hopping specification'
+                        );
                     if (!hopInfo.amountMg)
-                        throw new BrewException('Hop amount [amountMg] is a mandatory in hopping specification');
+                        throw new BrewException(
+                            'Hop amount [boiling.hopping.amountMg] is a mandatory in hopping specification'
+                        );
                 });
             }
 
@@ -157,8 +173,8 @@ export default function brewGraph(params) {
      * Calculate heating time based on the heating reason
      */
     const calculateHeatingTime = (degrees) => {
-        let d = info.heatingReasonDPM.split(':')[0];
-        let t = info.heatingReasonDPM.split(':')[1];
+        let d = info.heatingReasonDPM_UP.split(':')[0];
+        let t = info.heatingReasonDPM_UP.split(':')[1];
 
         return degrees / (d / t);
     };
@@ -173,7 +189,7 @@ export default function brewGraph(params) {
         if (!info.plan) throw new BrewException('A plan is mandatory');
         if (!info.plan.mash) throw new BrewException('No mash information informed');
 
-        info.plan.mash.forEach((step) => {
+        info.plan.mash.ramps.forEach((step) => {
             if (!step.time) throw new BrewException('time property is mandatory in all the steps');
             if (!step.temperature) throw new BrewException('temperature property is mandatory in all the steps');
             totalTime += calculateHeatingTime(step.temperature - lastTemp) + step.time;
@@ -211,6 +227,26 @@ export default function brewGraph(params) {
         totalTime += getBoilingTime(mashTime.lastTemperature);
 
         return totalTime;
+    };
+
+    /**
+     * Get the Color Scale
+     */
+    const getColorScale = () => {
+        let colorScale = [];
+        for (let i = 0; i < info.plan.mash.ramps.length; i++) {
+            colorScale.push(info.theme.mashColors[i]);
+        }
+        colorScale.push({
+            color: info.theme.boilingColor,
+            colorAlpha: info.theme.boilingColorAlpha,
+        });
+        colorScale.push({
+            color: info.theme.heatingColor,
+            colorAlpha: info.theme.heatingColor,
+        });
+
+        return colorScale;
     };
 
     /**
@@ -304,7 +340,7 @@ export default function brewGraph(params) {
         }
 
         // Draw Y axis the scale
-        let timeUnit = (10 * sW) / getPlanTime();
+        let timeUnit = (10 * sW) / (getPlanTime() + 5);
         let scale = parseInt(sW / timeUnit) + 1;
         let lastStep = borderX;
         for (let i = 0; i < scale; i++) {
@@ -334,6 +370,221 @@ export default function brewGraph(params) {
     };
 
     /**
+     * Draw the data grid
+     */
+    const drawDataGrid = (ctx, data) => {
+        // Draw X axis the scale
+        for (let i = 0; i < 13; i++) {
+            ctx.beginPath();
+            ctx.lineWidth = 0.1;
+            ctx.lineColor = 'grey';
+            ctx.setLineDash([3, 3]);
+            ctx.moveTo(0, (i * data.h) / 12 + 2);
+            ctx.lineTo(data.w, (i * data.h) / 12 + 2);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // Draw Y axis the scale
+        let timeUnit = (10 * data.w) / getPlanTime();
+        let scale = parseInt(data.w / timeUnit);
+        for (let i = 0; i < scale; i++) {
+            ctx.beginPath();
+            ctx.lineWidth = 0.1;
+            ctx.lineColor = 'grey';
+            ctx.setLineDash([3, 3]);
+            ctx.moveTo((i + 1) * timeUnit, 0);
+            ctx.lineTo((i + 1) * timeUnit, data.h);
+            ctx.closePath();
+            ctx.stroke();
+        }
+    };
+
+    /**
+     * Draw the Step Title (Mash / Boiling / etc)
+     */
+    const drawStepTitle = (ctx, title, x, data) => {
+        ctx.font = info.theme.axisLabelFont;
+        ctx.fillStyle = info.theme.axisLabelColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${title}`, x * data.pw, 20);
+    };
+
+    /**
+     * Draw a give title
+     */
+    const drawHeatingStep = (ctx, step, data) => {
+        let timeToAchieve = calculateHeatingTime(step.temperature - data.lastTemp);
+
+        ctx.beginPath();
+        ctx.moveTo(data.lastTime * data.pw, data.h);
+        ctx.lineTo((data.lastTime + timeToAchieve) * data.pw, data.h);
+        ctx.lineTo((data.lastTime + timeToAchieve) * data.pw, data.h - step.temperature * data.ph);
+        ctx.lineTo(data.lastTime * data.pw, data.h - data.lastTemp * data.ph);
+        ctx.closePath();
+        ctx.fillStyle = info.theme.heatingColor;
+        ctx.fill();
+
+        //check if has water
+        if (step.addWater) {
+            if (step.addWater == true) ctx.drawImage(pictures.water, (data.lastTime + 1) * data.pw, data.h - 30);
+        }
+
+        //Draw label
+        ctx.font = info.theme.dataLabelFontL1;
+        ctx.fillStyle = info.theme.axisLabelColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            `+${step.temperature - data.lastTemp}°`,
+            (data.lastTime + timeToAchieve) * data.pw - (timeToAchieve * data.pw) / 2,
+            data.h - step.temperature * data.ph - 5
+        );
+
+        ctx.font = info.theme.dataLabelFontL2;
+        ctx.fillStyle = info.theme.axisLabelColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            `(${(step.temperature - data.lastTemp) / timeToAchieve}°:1\'\')`,
+            (data.lastTime + timeToAchieve) * data.pw - (timeToAchieve * data.pw) / 2,
+            data.h - step.temperature * data.ph + 13
+        );
+
+        ctx.font = info.theme.dataLabelFontL3;
+        ctx.fillStyle = 'red';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            `(${info.heatingReasonDPM_UP} Δt=˜${timeToAchieve}\'\')`,
+            (data.lastTime + timeToAchieve) * data.pw - (timeToAchieve * data.pw) / 2,
+            data.h - step.temperature * data.ph + 30
+        );
+
+        data.lastTime += timeToAchieve;
+
+        return data;
+    };
+
+    /**
+     * Draw the Mash Step
+     */
+    const drawBrewStep = (ctx, step, data) => {
+        let colorScale = getColorScale();
+        // Draw step
+        ctx.beginPath();
+        ctx.fillStyle = colorScale[data.mashStepCount].colorAlpha;
+        ctx.moveTo(data.lastTime * data.pw, data.h);
+        ctx.lineTo((data.lastTime + step.time) * data.pw, data.h);
+        ctx.lineTo((data.lastTime + step.time) * data.pw, data.h - step.temperature * data.ph);
+        ctx.lineTo(data.lastTime * data.pw, data.h - step.temperature * data.ph);
+        ctx.closePath();
+        ctx.fill();
+
+        //check if has grain
+        let yItemCount = 1;
+        if (step.addGrain) {
+            if (step.addGrain == true) {
+                ctx.drawImage(pictures.grain, data.lastTime * data.pw + 10, data.h - yItemCount * 30);
+                yItemCount++;
+            }
+        }
+
+        //check if has hop
+        if (step.addHop) {
+            if (step.addHop == true) {
+                ctx.drawImage(pictures.hop, data.lastTime * data.pw + 5, data.h - yItemCount * 30);
+                yItemCount++;
+            }
+        }
+
+        //check if has spice
+        if (step.addSpice) {
+            if (step.addSpice == true) {
+                ctx.drawImage(pictures.spice, data.lastTime * data.pw + 5, data.h - yItemCount * 30);
+            }
+        }
+
+        //Draw label
+        ctx.font = info.theme.dataLabelFontL1;
+        ctx.fillStyle = info.theme.axisLabelColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            step.temperature + '°',
+            (data.lastTime + step.time) * data.pw - (step.time * data.pw) / 2,
+            data.h - step.temperature * data.ph - 20
+        );
+
+        ctx.font = info.theme.dataLabelFontL2;
+        ctx.fillStyle = 'green';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            `(Δt=${step.time}\'')`,
+            (data.lastTime + step.time) * data.pw - (step.time * data.pw) / 2,
+            data.h - step.temperature * data.ph - 5
+        );
+
+        data.lastTemp = step.temperature;
+        data.lastTime += step.time;
+        data.mashStepCount++;
+
+        return data;
+    };
+
+    /**
+     * Draw splitter line between the steps
+     */
+    const drawSplitterLine = (ctx, time, data) => {
+        // Draw the Line
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.lineColor = info.theme.axisLineColor;
+        ctx.moveTo(time * data.pw, data.h);
+        ctx.lineTo(time * data.pw, 0);
+        ctx.setLineDash([3, 3]);
+        ctx.closePath();
+        ctx.stroke();
+    };
+
+    /**
+     * Draw the Hop Schedule
+     */
+    const drawHopSchedule = (ctx, data) => {
+        // Draw the hopping schedule
+
+        if (info.plan.boiling.hopping) {
+            let hopData = info.plan.boiling.hopping;
+            let timeToBoil = getMashTime().totalTime;
+            let stepY = 100;
+            timeToBoil += calculateHeatingTime(
+                info.plan.boiling.temperature - info.plan.mash.ramps[info.plan.mash.ramps.length - 1].temperature
+            );
+
+            hopData.forEach((hopInfo) => {
+                ctx.drawImage(pictures.hop, (timeToBoil + hopInfo.time) * data.pw, stepY);
+
+                ctx.font = info.theme.dataLabelFontL2;
+                ctx.fillStyle = info.theme.axisLabelColor;
+                ctx.textAlign = 'center';
+                ctx.fillText(`${hopInfo.hopName}`, (timeToBoil + hopInfo.time) * data.pw + 10, stepY - 3);
+                ctx.fillText(
+                    `${hopInfo.time}\'\' - ${hopInfo.amountMg}mg`,
+                    (timeToBoil + hopInfo.time) * data.pw + 10,
+                    stepY + 40
+                );
+
+                // Draw the Line
+                ctx.beginPath();
+                ctx.lineWidth = 1;
+                ctx.lineColor = 'green';
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo((timeToBoil + hopInfo.time) * data.pw + 10, stepY + 60);
+                ctx.lineTo((timeToBoil + hopInfo.time) * data.pw + 10, data.h);
+                ctx.closePath();
+                ctx.stroke();
+
+                stepY += 70;
+            });
+        }
+    };
+    /**
      * draw the Graph
      */
     const drawData = (w, h) => {
@@ -342,304 +593,83 @@ export default function brewGraph(params) {
         cnv.width = info.width;
         cnv.height = info.height;
 
-        let pw = w / (getPlanTime() + 5); //percentage of width
-        let ph = h / 120; // percentage of height
-
-        let lastTime = 0;
-        let lastTemp = info.initialTemperature;
+        let data = {
+            w: w,
+            h: h,
+            pw: w / (getPlanTime() + 5),
+            ph: h / 120,
+            lastTime: 0,
+            lastTemp: info.initialTemperature,
+            mashStepCount: 0,
+        };
 
         ctx.fillStyle = info.theme.plotAreaBackgroundColor;
         ctx.fillRect(0, 0, info.width, info.height);
 
-        // Draw X axis the scale
-        for (let i = 0; i < 13; i++) {
-            ctx.beginPath();
-            ctx.lineWidth = 0.1;
-            ctx.lineColor = 'grey';
-            ctx.setLineDash([3, 3]);
-            ctx.moveTo(0, (i * h) / 12 + 2);
-            ctx.lineTo(w, (i * h) / 12 + 2);
-            ctx.closePath();
-            ctx.stroke();
-        }
+        drawDataGrid(ctx, data); // Draw the data grid
+        drawStepTitle(ctx, 'Mash', getMashTime().totalTime / 2, data); //Draw the Mash title
 
-        // Draw Y axis the scale
-        let timeUnit = (10 * w) / getPlanTime();
-        let scale = parseInt(w / timeUnit);
-        for (let i = 0; i < scale; i++) {
-            ctx.beginPath();
-            ctx.lineWidth = 0.1;
-            ctx.lineColor = 'grey';
-            ctx.setLineDash([3, 3]);
-            ctx.moveTo((i + 1) * timeUnit, 0);
-            ctx.lineTo((i + 1) * timeUnit, h);
-            ctx.closePath();
-            ctx.stroke();
-        }
-
-        //Draw the Mash title
-        ctx.font = info.theme.axisLabelFont;
-        ctx.fillStyle = info.theme.axisLabelColor;
-        ctx.textAlign = 'center';
-        ctx.fillText(`Mash`, (getMashTime().totalTime * pw) / 2, 20);
-
-        let mashStepCount = 0;
-        info.plan.mash.forEach((step) => {
-            let timeToAchieve = calculateHeatingTime(step.temperature - lastTemp);
-            // Time to achieve
-            ctx.beginPath();
-            ctx.moveTo(lastTime, h);
-            ctx.lineTo(lastTime + timeToAchieve * pw, h);
-            ctx.lineTo(lastTime + timeToAchieve * pw, h - step.temperature * ph);
-            ctx.lineTo(lastTime, h - lastTemp * ph);
-            ctx.closePath();
-            ctx.fillStyle = info.theme.heatingColor;
-            ctx.fill();
-
-            //check if has water
-            if (step.addWater) {
-                if (step.addWater == true) ctx.drawImage(pictures.water, lastTime + 5, h - 30);
-            }
-
-            //Draw label
-            ctx.font = info.theme.dataLabelFontL1;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `+${step.temperature - lastTemp}°`,
-                lastTime + timeToAchieve * pw - (timeToAchieve * pw) / 2,
-                h - step.temperature * ph - 5
-            );
-
-            ctx.font = info.theme.dataLabelFontL2;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `(${(step.temperature - lastTemp) / timeToAchieve}°:1\'\')`,
-                lastTime + timeToAchieve * pw - (timeToAchieve * pw) / 2,
-                h - step.temperature * ph + 13
-            );
-
-            ctx.font = info.theme.dataLabelFontL3;
-            ctx.fillStyle = 'red';
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `(${info.heatingReasonDPM} Δt=˜${timeToAchieve}\'\')`,
-                lastTime + timeToAchieve * pw - (timeToAchieve * pw) / 2,
-                h - step.temperature * ph + 30
-            );
-
-            lastTime += timeToAchieve * pw;
-
-            // Draw step
-            ctx.beginPath();
-            ctx.moveTo(lastTime, h);
-            ctx.lineTo(lastTime + step.time * pw, h);
-            ctx.lineTo(lastTime + step.time * pw, h - step.temperature * ph);
-            ctx.lineTo(lastTime, h - step.temperature * ph);
-            ctx.closePath();
-            ctx.fillStyle = info.theme.mashColors[mashStepCount].colorAlpha;
-            ctx.fill();
-
-            //check if has grain
-            let yItemCount = 1;
-            if (step.addGrain) {
-                if (step.addGrain == true) {
-                    ctx.drawImage(pictures.grain, lastTime + 10, h - yItemCount * 30);
-                    yItemCount++;
-                }
-            }
-
-            //check if has hop
-            if (step.addHop) {
-                if (step.addHop == true) {
-                    ctx.drawImage(pictures.hop, lastTime + 5, h - yItemCount * 30);
-                    yItemCount++;
-                }
-            }
-
-            //check if has spice
-            if (step.addSpice) {
-                if (step.addSpice == true) {
-                    ctx.drawImage(pictures.spice, lastTime + 5, h - yItemCount * 30);
-                }
-            }
-
-            //Draw label
-            ctx.font = info.theme.dataLabelFontL1;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                step.temperature + '°',
-                lastTime + step.time * pw - (step.time * pw) / 2,
-                h - step.temperature * ph - 20
-            );
-
-            ctx.font = info.theme.dataLabelFontL2;
-            ctx.fillStyle = 'green';
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `(Δt=${step.time}\'')`,
-                lastTime + step.time * pw - (step.time * pw) / 2,
-                h - step.temperature * ph - 5
-            );
-
-            lastTime += step.time * pw;
-            lastTemp = step.temperature;
-            mashStepCount++;
+        // Draw the Mash Steps
+        info.plan.mash.ramps.forEach((step) => {
+            data = drawHeatingStep(ctx, step, data);
+            data = drawBrewStep(ctx, step, data);
         });
 
+        // *************
         //Start the boiling areas
         if (info.plan.boiling) {
-            let timeToAchieve = calculateHeatingTime(info.plan.boiling.temperature - lastTemp);
-
             // Draw the Line
-            ctx.beginPath();
-            ctx.lineWidth = 2;
-            ctx.lineColor = info.theme.axisLineColor;
-            ctx.moveTo(lastTime, h);
-            ctx.lineTo(lastTime, 0);
-            ctx.closePath();
-            ctx.stroke();
-
+            drawSplitterLine(ctx, data.lastTime, data);
+            data = drawHeatingStep(ctx, info.plan.boiling, data);
             //Draw the Boiling title
-            ctx.font = info.theme.axisLabelFont;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `${info.plan.boiling.step}`,
-                (getMashTime().totalTime + getBoilingTime(lastTemp) / 2) * pw,
-                20
+            drawStepTitle(
+                ctx,
+                info.plan.boiling.step,
+                getMashTime().totalTime + getBoilingTime(data.lastTemp) / 2,
+                data
             );
 
-            // Time to achieve
-            ctx.beginPath();
-            ctx.lineWidth = 0.1;
-            ctx.lineColor = 'grey';
-            ctx.moveTo(lastTime, h);
-            ctx.lineTo(lastTime + timeToAchieve * pw, h);
-            ctx.lineTo(lastTime + timeToAchieve * pw, h - info.plan.boiling.temperature * ph);
-            ctx.lineTo(lastTime, h - lastTemp * ph);
-            ctx.closePath();
-            ctx.fillStyle = info.theme.heatingColor;
-            ctx.fill();
-
-            //check if has water
-            if (info.plan.boiling.addWater) {
-                if (info.plan.boiling.addWater == true) ctx.drawImage(pictures.water, lastTime + 5, h - 30);
-            }
-
-            //Draw label
-            ctx.font = info.theme.dataLabelFontL1;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `+${info.plan.boiling.temperature - lastTemp}°`,
-                lastTime + timeToAchieve * pw - (timeToAchieve * pw) / 2,
-                h - info.plan.boiling.temperature * ph - 5
-            );
-
-            ctx.font = info.theme.dataLabelFontL2;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `(${(info.plan.boiling.temperature - lastTemp) / timeToAchieve}°:1\'\')`,
-                lastTime + timeToAchieve * pw - (timeToAchieve * pw) / 2,
-                h - info.plan.boiling.temperature * ph + 13
-            );
-
-            ctx.font = info.theme.dataLabelFontL3;
-            ctx.fillStyle = 'red';
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `(${info.heatingReasonDPM} Δt=˜${timeToAchieve}\'\')`,
-                lastTime + timeToAchieve * pw - (timeToAchieve * pw) / 2,
-                h - info.plan.boiling.temperature * ph + 30
-            );
-
-            lastTime += timeToAchieve * pw;
-
-            // Draw boiling
-            ctx.beginPath();
-            ctx.moveTo(lastTime, h);
-            ctx.lineTo(lastTime + info.plan.boiling.time * pw, h);
-            ctx.lineTo(lastTime + info.plan.boiling.time * pw, h - info.plan.boiling.temperature * ph);
-            ctx.lineTo(lastTime, h - info.plan.boiling.temperature * ph);
-            ctx.closePath();
-            ctx.fillStyle = info.theme.boilingColorAlpha;
-            ctx.fill();
-
-            //check if has grain
-            let yItemCount = 1;
-            if (info.plan.boiling.addGrain) {
-                if (info.plan.boiling.addGrain == true) {
-                    ctx.drawImage(pictures.grain, lastTime + 10, h - 30 * yItemCount);
-                    yItemCount++;
-                }
-            }
-
-            //check if has spice
-            if (info.plan.boiling.addSpice) {
-                if (info.plan.boiling.addSpice == true) {
-                    ctx.drawImage(pictures.spice, lastTime + 5, h - 30 * yItemCount);
-                }
-            }
-
-            //Draw label
-            ctx.font = info.theme.dataLabelFontL1;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                info.plan.boiling.temperature + '°',
-                lastTime + info.plan.boiling.time * pw - (info.plan.boiling.time * pw) / 2,
-                h - info.plan.boiling.temperature * ph - 20
-            );
-
-            ctx.font = info.theme.dataLabelFontL2;
-            ctx.fillStyle = 'green';
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                `(Δt=${info.plan.boiling.time}\'')`,
-                lastTime + info.plan.boiling.time * pw - (info.plan.boiling.time * pw) / 2,
-                h - info.plan.boiling.temperature * ph - 5
-            );
-
-            // Draw the Line
-            ctx.beginPath();
-            ctx.lineWidth = 2;
-            ctx.lineColor = info.theme.axisLineColor;
-            ctx.moveTo(lastTime + info.plan.boiling.time * pw, h);
-            ctx.lineTo(lastTime + info.plan.boiling.time * pw, 0);
-            ctx.closePath();
-            ctx.stroke();
-
-            // Draw the hopping schedule
-            if (info.plan.boiling.hopping) {
-                let hopData = info.plan.boiling.hopping;
-                let timeToBoil = getMashTime().totalTime;
-                let stepY = 100;
-                timeToBoil += calculateHeatingTime(info.plan.boiling.temperature - lastTemp);
-
-                hopData.forEach((hopInfo) => {
-                    ctx.drawImage(pictures.hop, (timeToBoil + hopInfo.time) * pw, stepY);
-
-                    ctx.font = info.theme.dataLabelFontL2;
-                    ctx.textAlign = 'center';
-                    ctx.fillText(`${hopInfo.hopName}`, (timeToBoil + hopInfo.time) * pw + 10, stepY - 3);
-                    ctx.fillText(
-                        `${hopInfo.time}\'\' - ${hopInfo.amountMg}mg`,
-                        (timeToBoil + hopInfo.time) * pw + 10,
-                        stepY + 40
-                    );
-
-                    stepY += 60;
-                });
-            }
+            data = drawBrewStep(ctx, info.plan.boiling, data);
+            drawHopSchedule(ctx, data);
+            drawSplitterLine(ctx, getPlanTime(), data);
         }
 
         return {
-            image: ctx.getImageData(0, 0, w, h),
+            image: ctx.getImageData(0, 0, data.w, data.h),
         };
+    };
+
+    /**
+     * Draw Legend Item
+     */
+    const drawLegendItem = (ctx, element, data) => {
+        let colorScale = getColorScale();
+
+        ctx.fillStyle = colorScale[data.mashStepCount].color;
+        ctx.fillRect(15, data.beginH + 5, data.markSize, data.space - 5);
+        ctx.stroke();
+
+        // Draw the mark's description
+        ctx.font = info.theme.legendItemFont;
+        ctx.fillStyle = info.theme.axisLabelColor;
+        ctx.textAlign = 'left';
+        ctx.fillText(element.step, data.markSize + 25, data.beginH + 18);
+
+        data.beginH += data.space;
+        data.mashStepCount++;
+
+        return data;
+    };
+
+    /**
+     * Draw the legend icon
+     */
+    const drawLegendIcon = (ctx, data, icon, title) => {
+        ctx.drawImage(icon, 22, data.beginH + 5);
+        ctx.fillText(title, data.markSize + 25, data.beginH + 22);
+        data.beginH += data.space + 5;
+
+        return data;
     };
 
     /**
@@ -655,14 +685,17 @@ export default function brewGraph(params) {
         ctx.fillStyle = info.theme.backgroundColor;
         ctx.fillRect(0, 0, info.width, info.height);
 
-        let space = 20;
-        let beginH = 30;
-        let markSize = 30;
+        let data = {
+            space: 20,
+            beginH: 30,
+            markSize: 30,
+            mashStepCount: 0,
+        };
 
-        ctx.fillStyle = 'rgba(250,250,250,1)';
+        ctx.fillStyle = 'rgba(200,200,200,1)';
         ctx.shadowBlur = 4;
         ctx.shadowColor = 'grey';
-        ctx.fillRect(5, 5, 250, beginH + (info.plan.length + 1) * space + 10);
+        ctx.fillRect(5, 5, 250, data.beginH + (info.plan.length + 1) * data.space + 10);
         ctx.shadowBlur = 0;
 
         ctx.font = info.theme.legendFont;
@@ -670,68 +703,30 @@ export default function brewGraph(params) {
         ctx.textAlign = 'left';
         ctx.fillText(info.legendTitle, 15, 25);
 
-        let mashStepCount = 0;
-        info.plan.mash.forEach((element) => {
-            // Draw the mark
-            ctx.fillStyle = info.theme.mashColors[mashStepCount].color;
-            ctx.fillRect(15, beginH + 5, markSize, space - 5);
-            ctx.stroke();
-
-            // Draw the mark's description
-            ctx.font = info.theme.legendItemFont;
-            ctx.fillStyle = info.theme.axisLabelColor;
-            ctx.textAlign = 'left';
-            ctx.fillText(element.step, markSize + 25, beginH + 18);
-
-            beginH += space;
-            mashStepCount++;
+        // Draw the mark
+        info.plan.mash.ramps.forEach((element) => {
+            data = drawLegendItem(ctx, element, data);
         });
 
-        // Draw the mark to boiling time
-        ctx.fillStyle = info.theme.boilingColorAlpha;
-        ctx.fillRect(15, beginH + 5, markSize, space - 5);
-        ctx.stroke();
-
-        // Draw the mark's description
-        ctx.font = info.theme.legendItemFont;
-        ctx.fillStyle = info.theme.axisLabelColor;
-        ctx.textAlign = 'left';
-        ctx.fillText(info.plan.boiling.step, markSize + 25, beginH + 18);
-
-        beginH += space;
-
-        // Draw the mark to Heating time
-        ctx.fillStyle = info.theme.heatingColor;
-        ctx.fillRect(15, beginH + 5, markSize, space - 5);
-        ctx.stroke();
-
-        // Draw the mark's description
-        ctx.font = info.theme.legendItemFont;
-        ctx.fillStyle = info.theme.axisLabelColor;
-        ctx.textAlign = 'left';
-        ctx.fillText(info.heatingTitle, markSize + 25, beginH + 18);
+        data = drawLegendItem(ctx, info.plan.boiling, data);
+        data = drawLegendItem(
+            ctx,
+            {
+                step: info.heatingTitle,
+            },
+            data
+        );
 
         // Draw the icons
-        beginH += space;
-        ctx.drawImage(pictures.grain, 22, beginH + 5);
-        ctx.fillText('Grain', markSize + 25, beginH + 22);
-        // Draw the icons
-        beginH += space + 5;
-        ctx.drawImage(pictures.water, 22, beginH + 5);
-        ctx.fillText('Water', markSize + 25, beginH + 22);
-        // Draw the icons
-        beginH += space + 5;
-        ctx.drawImage(pictures.hop, 20, beginH + 5);
-        ctx.fillText('Hop', markSize + 25, beginH + 22);
-        // Draw the icons
-        beginH += space + 5;
-        ctx.drawImage(pictures.spice, 22, beginH + 5);
-        ctx.fillText('Spices', markSize + 25, beginH + 22);
+        data = drawLegendIcon(ctx, data, pictures.grain, `Grain`);
+        data = drawLegendIcon(ctx, data, pictures.water, `Water`);
+        data = drawLegendIcon(ctx, data, pictures.hop, `Hop`);
+        data = drawLegendIcon(ctx, data, pictures.spice, `Spice`);
 
         return {
             width: cnv.width,
-            height: beginH,
-            image: ctx.getImageData(0, 0, 265, beginH + (info.plan.mash.length + 1) * space + 10),
+            height: data.beginH,
+            image: ctx.getImageData(0, 0, 265, data.beginH + (info.plan.mash.ramps.length + 1) * data.space + 10),
         };
     };
 
