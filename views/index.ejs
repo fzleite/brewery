@@ -19,8 +19,8 @@
     <script type="module">
         import brewGraph from './js/brewGraph.js';
 
-        let mash = new brewGraph({
-            title: 'BREJA DO TIAGO QUE NAO SAI',
+        const plan = {
+            title: 'CRONOGRAMA DE CERVEJA',
             width: 1200,
             heatingReasonDPM_UP: "2:1",
             heatingReasonDPM_DOWN: "1:5",
@@ -37,8 +37,8 @@
                             step: 'Liberação Enzimática',
                             temperature: 55,
                             time: 30,
-                            addWater: true,
-                            addGrain: true,
+                            waterL: 20,
+                            grainKg: 5,
                         },
                         {
                             step: 'Liberação Proteica',
@@ -49,19 +49,18 @@
                             step: 'Mash-out',
                             temperature: 78,
                             time: 15,
-                            addWater: true,
-                            addHop: true,
-                            addSpice: true,
-                            addGrain: true,
+                            waterL: 20,
+                            hopMg: 5,
+                            spiceMg: 10,
                         },
                     ],
                 },
                 boiling : {
                     temperature : 100,
                     time : 60,
-                    addWater:true,
-                    addSpice:true,
-                    addGrain:true,
+                    waterL:5,
+                    spiceMg:5,
+                    grainKg:1,
                     hopping : [
                         {
                             hopName : 'Cascade',
@@ -90,11 +89,14 @@
                     ],
                 }
             },
-        });
+        };
+
+        let mash = new brewGraph();
 
         document.onreadystatechange = (state) => {
             if(document.readyState == 'complete'){
                 mash.setContext(document.getElementById("mash"));
+                mash.initPlan(plan);
                 mash.draw();
             }
         }
