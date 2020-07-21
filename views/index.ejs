@@ -10,14 +10,25 @@
             image-rendering: crisp-edges;
             image-rendering: -moz-crisp-edges;
         }
+        #plant {
+            image-rendering: crisp-edges;
+            image-rendering: -moz-crisp-edges;
+        }
     </style>
 </head>
 
 <body>
-    <canvas id="mash"></canvas>
+    <table border="0" valign="top">
+        <tr><td valign="top"><canvas id="mash"></canvas></td>
+            <td valign="top"><canvas id="plant"></canvas></td></tr>
+    </table>
+    
     <script type="module" src=˜./js/brewGraph.js˜></script>
+    <script type="module" src=˜./js/plant-monitor.js˜></script>
     <script type="module">
         import brewGraph from './js/brewGraph.js';
+        import {actualData} from './data/actual.js';
+        import PlantMonitor from './js/plant-monitor.js';
 
         const plan = {
             title: 'CRONOGRAMA DE CERVEJA',
@@ -34,6 +45,7 @@
                     type: 'single',
                     ramps:[
                         {
+                            id: 1,
                             step: 'Liberação Enzimática',
                             temperature: 55,
                             time: 30,
@@ -41,11 +53,13 @@
                             grainKg: 5,
                         },
                         {
+                            id: 2,
                             step: 'Liberação Proteica',
                             temperature: 68,
                             time: 30,
                         },
                         {
+                            id: 3,
                             step: 'Mash-out',
                             temperature: 78,
                             time: 15,
@@ -92,12 +106,40 @@
         };
 
         let mash = new brewGraph();
+        let brewPlant = new PlantMonitor();
 
         document.onreadystatechange = (state) => {
             if(document.readyState == 'complete'){
                 mash.setContext(document.getElementById("mash"));
                 mash.initPlan(plan);
+
+                let i=0;
+                function add(){
+                    mash.addActual(actualData.actual[i]);
+                    i++;
+                    if( i == actualData.actual.length )
+                        return;
+                    setTimeout(add, 100);
+                }
+                add();
+
                 mash.draw();
+
+                brewPlant.setContext(document.getElementById("plant"));
+                brewPlant.init();
+                brewPlant.draw();
+
+                let status = 0;
+                function changeStatus(){
+                    if(status == 0)
+                        brewPlant.setStatus('Valvula Direcional 1', 'on');
+                    else
+                        brewPlant.setStatus('Valvula Direcional 1', 'manual');
+
+                    status = status == 0 ? 1 : 0;
+                    setTimeout(changeStatus, 5000);
+                }
+                changeStatus();
             }
         }
 

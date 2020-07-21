@@ -6,6 +6,7 @@ export default function brewGraph(params) {
 	let plan = {};
 	let dimensions = {};
 	let info = {};
+	let actual = [];
 
 	// prettier-ignore
 	const pictures = {
@@ -13,7 +14,9 @@ export default function brewGraph(params) {
         grain : new Image(),
         water : new Image(),
         spice : new Image(),
-    }
+	}
+
+	// https://www.base64-image.de/
 	pictures.hop.src =
 		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAZCAYAAAA14t7uAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAUUSURBVEhLnZQNaJVlFMfPee69m865pKWtljlFKcYU/GhmFto0tQxJy+8PUvEj0IooC4wummUhlkMqomWFRpRiRFnpLBWkaWnDwrn8qFl+zNSJTcfcve9z+r33XrSpYXTg5X2e8/E//3Oe8zzyf2RQfFB0yrL72mW2VxXN/P+L6Oy3+0YDl9/eEsnnI2LVXlyRmA2MumBuYJGRuCQKT3xTsWiR+Egm6Joy842yXupzJpsPxjjT4ahKVHUa1DqbuAZAl6PLPVLUb3XN2hq7JnA8HnfdJmqpE7fem3RxIt1RnzKRZlW5zrzuF3G1otZI+W2ym5purN5Qt/1fWzH2k7GR3FMNXZxPghnZpqI3i0kFDPeb+T5i2gDwaVMdI+YvwHgfFUymNS+2TWa9dFXGIctmVzuOkserumGoCgHZY87eVa9PqdMhAB3h6wHTW8Xpb+JkvXk5gV/PlojvelXgHuMjTxD0Ogw3wWAvgU1m0hnTL+inmtphJ/qxmf1AJVF87jHR7k7lDPZHRGw3LWstM1YOpWRdjLMLewiTcvo1l01/zjoCwwo1oafyKPYk3wSqylcvHUiex0d33K5WwNPL7+4ozpcS1D7cwyxPVLNSa7MmdZKH8jF6+aA3K2IaCgA6CtZ2/DaTkET2owS6rxWwRrNmkC7JiZ8jOEu8YbeAfT3M3mTU6LlEU76ie536nSyrWENABpP0JL7XmwumtgKm3BI1Wwi7JTBJAH6AoHJMa+hh4NR1SnsCrLITkEr+9FR6qViBqe/PucTwXePml4/ITruG5cqhsJfO5DYCniRwGEnm0eOnsQ5nX8O+FsdVXmQHIVNZ/5pqh+lBdZEN6FZGTKKRklGdJ/UZ2a209+ieBzTRQjKdyFfgnOyC11xYx8KkgCfU2XLKLcQ+EIYzWAfi3E5YktPa8JUAsCOmrsq5ZJRboktcy/ktBISn/h1sC5lJuiLMalpYcy9caXhwJLmFmLD/nIN/CP/70d+JPi9L3brTWzqcdhWPV9aRrorYvrh+xKXYKl6+R9ePQNjYn2CudBKZBe+fMknOYN8Eu2/Z5oY6rnsNXL5skeTLxcXF6bei7wPdsql1NMs24ekCtJGx+YNbthHdIQD7o3uGGuqc13WMYRUM82lAI7fwL+/tIJfjJFVMIOHSFQveT48bDahGwXlkRGWKVztG2ldozxJKLeNri+Fh77QroK/iNZYEd8H/dmwjLEXM3mvsmP95CJECjnh3gsOoD9ehkDnLWWQBjH4ONxl1uLhBxV+gFc1Mx1m1sM/SgS+btqxPWLB47bi1QeibAo4lImfFp/oF8bRQegGYZwBJsL6AIgRrwfIVX9w5twzGnzJmHxI0zwe2NMcFvHJpuchmzltDeyS97UmXTCiAPIcvcO/PMw7tKDXpvKsNnAxwas+FUxFOCn1vBMYTcISpGb5q/uZjYfxF4FBmvTlkKG/AawT1JOY4hW7yXidxMKlZJjgss5Kww7AsJnoAOszytcSCORWzt10cz1bAiM58p6yTT+gdvBhRF5UVqLpkbJck1RLZzbuyOmSazAkqP5i+rTltTEuqx/8Qs4Tci/IzJmUhl2RD2OyM7ZKED5TqAFg96+j/5aChXPHQj+o3raYxt46HXbdGYzkrvG+h7dxEUWadVKY8TlaP/Sj1hm/A4N6jimqrv6j7PQORkstbcYXE4+LqC8puSph24vY5L4HnGjckzJ0L7VEf49FLxji042wz1Yn8DfNYRPv/gEa7AAAAAElFTkSuQmCC';
 	pictures.grain.src =
@@ -26,39 +29,124 @@ export default function brewGraph(params) {
 	/**
 	 * Set the canvas context
 	 */
-	let idOver = null;
-	let mCoordX = 0;
-	let mCoordY = 0;
+	let mouseCoords = {
+		x: 0,
+		y: 0,
+		idStep: null,
+		overActual: false,
+		actualTemp: 0,
+		actualTime: 0,
+		intersectionX: 0,
+		intersectionY: 0,
+	};
 
+	/**
+	 * Set the canvas object
+	 */
 	const setContext = (canvas) => {
 		info.canvas = canvas;
 		info.context = canvas.getContext('2d');
 
 		canvas.addEventListener('mousemove', (event) => {
-			let coord = [event.clientX, event.clientY - 20];
 			let isStepOver = false;
 
-			if (hoverBrewStep(coord, dimensions.data.coords)) {
-				idOver = null;
+			mouseCoords.x = event.clientX;
+			mouseCoords.y = event.clientY;
+			mouseCoords.overActual = false;
+
+			if (isMouseOverActualLine(mouseCoords)) {
+				mouseCoords.overActual = true;
+				mouseCoords.idStep = null;
+				draw();
+			} else if (hoverBrewStep(mouseCoords, dimensions.data.coords)) {
+				mouseCoords.idStep = null;
 
 				plan.allSteps.forEach((step) => {
-					isStepOver = hoverBrewStep(coord, step.coords.polygon);
+					isStepOver = hoverBrewStep(mouseCoords, step.coords.polygon);
 					if (isStepOver) {
-						if (idOver != step.sequence) {
-							idOver = step;
-							mCoordX = event.clientX;
-							mCoordY = event.clientY;
+						if (mouseCoords.idStep != step.sequence) {
+							mouseCoords.idStep = step;
 							return;
 						}
 					}
 				});
 				draw();
 			} else {
-				idOver = null;
+				mouseCoords.idStep = null;
 				draw();
 			}
-			//if(hoverBrewStep(coord, info.data))
 		});
+	};
+
+	/**
+	 * Set the actual data fron server
+	 */
+	const setActual = (actualData) => {
+		if (!actualData) throw new BrewException('Actual data is nandatory');
+		if (!actualData.actual) throw new BrewException('actual property [actual] is nandatory');
+		if (Object.prototype.toString.call(actualData.actual) != '[object Array]') throw new BrewException('Actual data must be an Array');
+
+		actualData.actual.forEach((measure) => {
+			if (!measure.timeMinute) throw new BrewException('A time minute [actual.timeMinute] is mandatory');
+			if (!measure.origin) throw new BrewException('A origin [actual.origin] is mandatory');
+			if (!measure.step) throw new BrewException('A step name [actual.step] is mandatory');
+			if (!measure.sensor1) throw new BrewException('A temperature measure for sensor1 [actual.sensor1] is mandatory');
+
+			let x = dimensions.graph.borderX + (measure.timeMinute - 1) * dimensions.data.pw;
+			let y = dimensions.data.h - measure.sensor1 * dimensions.data.ph + dimensions.graph.borderY + 12;
+
+			actual.push({
+				timeMinute: measure.timeMinute,
+				time: measure.time ? measure.time : '',
+				origin: measure.origin,
+				step: measure.step,
+				sensor1: measure.sensor1,
+				sensor2: measure.sensor2 ? measure.sensor2 : null,
+				sensor3: measure.sensor3 ? measure.sensor3 : null,
+				sensor4: measure.sensor4 ? measure.sensor4 : null,
+				sensor5: measure.sensor5 ? measure.sensor5 : null,
+				coords: {
+					x: x,
+					y: y,
+				},
+			});
+
+			// Recalculate the Heating reason
+			// if( )
+		});
+	};
+
+	/**
+	 * Add a actual data fron server
+	 */
+	const addActual = (measure) => {
+		if (!measure) throw new BrewException('Actual data is nandatory');
+
+		if (!measure.timeMinute) throw new BrewException('A time minute [actual.timeMinute] is mandatory');
+		if (!measure.origin) throw new BrewException('A origin [actual.origin] is mandatory');
+		if (!measure.step) throw new BrewException('A step name [actual.step] is mandatory');
+		if (!measure.sensor1) throw new BrewException('A temperature measure for sensor1 [actual.sensor1] is mandatory');
+
+		let x = dimensions.graph.borderX + (measure.timeMinute - 1) * dimensions.data.pw;
+		let y = dimensions.data.h - measure.sensor1 * dimensions.data.ph + dimensions.graph.borderY + 12;
+
+		actual.push({
+			timeMinute: measure.timeMinute,
+			time: measure.time ? measure.time : '',
+			origin: measure.origin,
+			step: measure.step,
+			sensor1: measure.sensor1,
+			sensor2: measure.sensor2 ? measure.sensor2 : null,
+			sensor3: measure.sensor3 ? measure.sensor3 : null,
+			sensor4: measure.sensor4 ? measure.sensor4 : null,
+			sensor5: measure.sensor5 ? measure.sensor5 : null,
+			coords: {
+				x: x,
+				y: y,
+			},
+		});
+
+		draw();
 	};
 
 	/**
@@ -92,6 +180,8 @@ export default function brewGraph(params) {
 		info.width = params.width || 800;
 		info.height = params.height || 600;
 		info.theme = theme;
+		info.actualColor = 'red';
+		info.actualColorHighlight = 'green';
 		info.plan = {
 			mash: null,
 			boiling: null,
@@ -130,7 +220,6 @@ export default function brewGraph(params) {
 
 		// Attributes the global plan
 		plan = generatePlan();
-		console.log(plan);
 	};
 
 	/**
@@ -559,6 +648,7 @@ export default function brewGraph(params) {
 
 		executionPlan.totalTime = totalTime;
 
+		console.log(executionPlan);
 		return executionPlan;
 	};
 
@@ -715,7 +805,7 @@ export default function brewGraph(params) {
 
 		if (step.waterL) {
 			ctx.drawImage(pictures.water, step.coords.x1 + 10, step.coords.y1 - yItemCount * 50);
-			ctx.fillText(`${step.waterL} l`, step.coords.x1 + 17, step.coords.y1 - yItemCount * 30 + 17);
+			ctx.fillText(`${step.draw} l`, step.coords.x1 + 17, step.coords.y1 - yItemCount * 30 + 17);
 			yItemCount++;
 		}
 
@@ -824,8 +914,8 @@ export default function brewGraph(params) {
 		ctx.fillStyle = step.colorAlpha;
 		ctx.shadowBlur = 0;
 		ctx.shadowColor = 'grey';
-		if (idOver)
-			if (idOver.sequence == step.sequence) {
+		if (mouseCoords.idStep)
+			if (mouseCoords.idStep.sequence == step.sequence) {
 				ctx.fillStyle = step.color;
 				//ctx.shadowBlur = 20;
 			}
@@ -956,52 +1046,110 @@ export default function brewGraph(params) {
 		let stepName = step.type == 'mash-heating' || step.type == 'boiling-heating' ? step.type : step.stepName;
 		let temperature =
 			step.type != 'mash-heating' && step.type != 'boiling-heating' ? `${step.temperature}°` : `+${step.temperature - step.startTemperature}°`;
-		let initY = mCoordY - boxHeight / 2 + 5;
+		let initY = mouseCoords.y - boxHeight / 2 + 5;
 
 		if (step.type == 'boiling') ctx.fillStyle = 'white';
 		else ctx.fillStyle = info.theme.axisLabelColor;
 
 		ctx.font = info.theme.dataLabelFontL1;
 		ctx.textAlign = 'left';
-		ctx.fillText(stepName, mCoordX + 30, initY + 10);
+		ctx.fillText(stepName, mouseCoords.x + 30, initY + 10);
 		ctx.font = info.theme.dataLabelFontL2;
-		ctx.fillText(`type: ${step.type}`, mCoordX + 30, initY + 30);
-		ctx.fillText(`Teperature: ${temperature}`, mCoordX + 30, initY + 50);
-		ctx.fillText(`Start at: ${step.startTime} minutes`, mCoordX + 30, initY + 70);
-		ctx.fillText(`Finish at: ${step.startTime + step.time} minutes`, mCoordX + 30, initY + 90);
-		ctx.fillText(`Duration: ${step.time} minutes`, mCoordX + 30, initY + 110);
+		ctx.fillText(`type: ${step.type}`, mouseCoords.x + 30, initY + 30);
+		ctx.fillText(`Teperature: ${temperature}`, mouseCoords.x + 30, initY + 50);
+		ctx.fillText(`Start at: ${step.startTime} minutes`, mouseCoords.x + 30, initY + 70);
+		ctx.fillText(`Finish at: ${step.startTime + step.time} minutes`, mouseCoords.x + 30, initY + 90);
+		ctx.fillText(`Duration: ${step.time} minutes`, mouseCoords.x + 30, initY + 110);
 
 		let xItemCount = 0;
 		let yStart = 120;
 		if (step.waterL) {
-			ctx.drawImage(pictures.water, mCoordX + 30 + xItemCount * 40, initY + yStart);
-			ctx.fillText(`${step.waterL} l`, mCoordX + 30 + xItemCount * 40, initY + yStart + 40);
+			ctx.drawImage(pictures.water, mouseCoords.x + 30 + xItemCount * 40, initY + yStart);
+			ctx.fillText(`${step.waterL} l`, mouseCoords.x + 30 + xItemCount * 40, initY + yStart + 40);
 			xItemCount++;
 		}
 
 		//check if has grain
 		if (step.grainKg) {
-			ctx.drawImage(pictures.grain, mCoordX + 30 + xItemCount * 40, initY + yStart);
-			ctx.fillText(`${step.grainKg} kg`, mCoordX + 30 + xItemCount * 40, initY + yStart + 40);
+			ctx.drawImage(pictures.grain, mouseCoords.x + 30 + xItemCount * 40, initY + yStart);
+			ctx.fillText(`${step.grainKg} kg`, mouseCoords.x + 30 + xItemCount * 40, initY + yStart + 40);
 			xItemCount++;
 		}
 
 		//check if has hop
 		if (step.hopMg) {
-			ctx.drawImage(pictures.hop, mCoordX + 30 + xItemCount * 40, initY + yStart);
-			ctx.fillText(`${step.hopMg} mg`, mCoordX + 30 + xItemCount * 40, initY + yStart + 40);
+			ctx.drawImage(pictures.hop, mouseCoords.x + 30 + xItemCount * 40, initY + yStart);
+			ctx.fillText(`${step.hopMg} mg`, mouseCoords.x + 30 + xItemCount * 40, initY + yStart + 40);
 			xItemCount++;
 		}
 
 		//check if has spice
 		if (step.spiceMg) {
-			ctx.drawImage(pictures.spice, mCoordX + 30 + xItemCount * 40, initY + yStart);
-			ctx.fillText(`${step.spiceMg} mg`, mCoordX + 30 + xItemCount * 40, initY + yStart + 40);
+			ctx.drawImage(pictures.spice, mouseCoords.x + 30 + xItemCount * 40, initY + yStart);
+			ctx.fillText(`${step.spiceMg} mg`, mouseCoords.x + 30 + xItemCount * 40, initY + yStart + 40);
 		}
 
 		return {
 			image: ctx.getImageData(0, 0, 110, 110),
 		};
+	};
+
+	/**
+	 * Draw actal data
+	 */
+	const drawActual = (ctx) => {
+		let itemCount = 0;
+
+		ctx.beginPath();
+		if (mouseCoords.overActual) {
+			ctx.strokeStyle = info.actualColorHighlight;
+			ctx.shadowBlur = 20;
+			ctx.shadowColor = 'green';
+		} else ctx.strokeStyle = info.actualColor;
+
+		ctx.lineWidth = 8;
+		ctx.lineCap = 'round';
+		actual.forEach((measure) => {
+			if (itemCount == 0) ctx.moveTo(measure.coords.x, measure.coords.y);
+			else ctx.lineTo(measure.coords.x, measure.coords.y);
+
+			itemCount++;
+		});
+
+		ctx.stroke();
+		ctx.shadowBlur = 0;
+	};
+
+	/**
+	 * Detect if mouse is over the actual line
+	 */
+	const isMouseOverActualLine = (coord) => {
+		let lastMeasure = 0;
+
+		mouseCoords.overActual = false;
+		actual.forEach((measure) => {
+			//let x = dimensions.graph.borderX + (measure.timeMinute - 1) * dimensions.data.pw;
+			if (coord.x > dimensions.graph.borderX && coord.x < dimensions.data.w - dimensions.graph.borderX) {
+				if (coord.x > measure.coords.x) {
+					lastMeasure = measure;
+				} else {
+					if (coord.y >= measure.coords.y - 30 && coord.y <= measure.coords.y + 30) {
+						mouseCoords.overActual = true;
+						mouseCoords.actualTemp = lastMeasure.sensor1;
+						mouseCoords.actualTime = lastMeasure.timeMinute;
+						mouseCoords.intersectionX = coord.x;
+						mouseCoords.intersectionY =
+							(measure.coords.x - lastMeasure.coords.x) *
+								((lastMeasure.coords.y - measure.coords.y) / (measure.coords.x - lastMeasure.coords.x)) +
+							measure.coords.y;
+
+						return true;
+					}
+				}
+			}
+		});
+
+		return false;
 	};
 
 	/**
@@ -1025,27 +1173,45 @@ export default function brewGraph(params) {
 		// Draw the legend
 		ctx.putImageData(legend.image, 50, info.height);
 
-		if (idOver) {
-			if (idOver.type != 'mash-heating' && idOver.type != 'boiling-heating') ctx.fillStyle = idOver.color;
+		// Draw the actual
+		drawActual(ctx);
+
+		if (mouseCoords.overActual) {
+			ctx.fillStyle = 'rgba(0,100,0,1)';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.arc(mouseCoords.intersectionX, mouseCoords.intersectionY, 10, 0, 2 * Math.PI);
+			ctx.fill();
+
+			ctx.fillStyle = 'yellow';
+			ctx.popupCoord(mouseCoords.x, mouseCoords.y - 20, 90, 50, {upperLeft: 10, upperRight: 10, lowerRight: 10, lowerLeft: 10}, true, true);
+
+			ctx.font = info.theme.dataLabelFontL1;
+			ctx.textAlign = 'center';
+			ctx.fillStyle = info.theme.axisLabelColor;
+
+			ctx.fillText(`Temp: ${mouseCoords.actualTemp}°`, mouseCoords.x - 5, mouseCoords.y - 80);
+			ctx.fillText(`${mouseCoords.actualTime} min`, mouseCoords.x - 5, mouseCoords.y - 58);
+		} else if (mouseCoords.idStep) {
+			if (mouseCoords.idStep.type != 'mash-heating' && mouseCoords.idStep.type != 'boiling-heating') ctx.fillStyle = mouseCoords.idStep.color;
 			else ctx.fillStyle = 'yellow';
 
 			ctx.font = info.theme.dataLabelFontL1;
-			let txtWidth = ctx.measureText(idOver.stepName).width;
-			let boxHeight = idOver.waterL || idOver.hopMg || idOver.grainKg || idOver.spiceMg ? 180 : 130;
+			let txtWidth = ctx.measureText(mouseCoords.idStep.stepName).width;
+			let boxHeight =
+				mouseCoords.idStep.waterL || mouseCoords.idStep.hopMg || mouseCoords.idStep.grainKg || mouseCoords.idStep.spiceMg ? 180 : 130;
 			txtWidth = txtWidth < 150 ? 150 : txtWidth + 40;
 
 			ctx.popup(
-				mCoordX + 20,
-				mCoordY - boxHeight / 2 - 5,
+				mouseCoords.x + 20,
+				mouseCoords.y - boxHeight / 2 - 5,
 				txtWidth,
 				boxHeight,
 				{upperLeft: 10, upperRight: 10, lowerRight: 10, lowerLeft: 10},
 				true,
 				true
 			);
-			drawInfoBox(ctx, idOver, boxHeight);
-
-			//ctx.putImageData(infoBox.image, idOver.coords.labelX, idOver.coords.labelY + 100);
+			drawInfoBox(ctx, mouseCoords.idStep, boxHeight);
 		}
 	};
 
@@ -1057,8 +1223,8 @@ export default function brewGraph(params) {
 		// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 		// https://stackoverflow.com/questions/22521982/check-if-point-is-inside-a-polygon
 
-		let x = coordinate[0],
-			y = coordinate[1];
+		let x = coordinate.x,
+			y = coordinate.y;
 
 		let inside = false;
 		for (var i = 0, j = step.length - 1; i < step.length; j = i++) {
@@ -1081,6 +1247,8 @@ export default function brewGraph(params) {
 			getBoilingTime,
 			getPlanTime,
 		},
+		setActual,
+		addActual,
 		setContext,
 		initPlan,
 		draw,
@@ -1110,6 +1278,7 @@ CanvasRenderingContext2D.prototype.popup = function (x, y, width, height, radius
 	}
 
 	let pastShadowBlur = this.shadowBlur;
+	this.lineWidth = 1;
 	this.shadowBlur = 20;
 	this.shadowColor = 'grey';
 	this.beginPath();
@@ -1123,6 +1292,48 @@ CanvasRenderingContext2D.prototype.popup = function (x, y, width, height, radius
 	this.lineTo(x, y + height / 2 + 10);
 	this.lineTo(x - 10, y + height / 2);
 	this.lineTo(x, y + height / 2 - 10);
+	this.lineTo(x, y + cornerRadius.upperLeft);
+	this.quadraticCurveTo(x, y, x + cornerRadius.upperLeft, y);
+	this.closePath();
+	if (stroke) {
+		this.stroke();
+	}
+	if (fill) {
+		this.fill();
+	}
+	this.shadowBlur = pastShadowBlur;
+};
+
+// Draw info box
+CanvasRenderingContext2D.prototype.popupCoord = function (x, y, width, height, radius, fill, stroke) {
+	var cornerRadius = {upperLeft: 0, upperRight: 0, lowerLeft: 0, lowerRight: 0};
+	if (typeof stroke == 'undefined') {
+		stroke = true;
+	}
+	if (typeof radius === 'object') {
+		for (var side in radius) {
+			cornerRadius[side] = radius[side];
+		}
+	}
+
+	y = y - height - 30;
+	x = x - width + width / 2 - 3;
+
+	let pastShadowBlur = this.shadowBlur;
+	this.lineWidth = 1;
+	this.shadowBlur = 20;
+	this.shadowColor = 'grey';
+	this.beginPath();
+	this.moveTo(x + cornerRadius.upperLeft, y);
+	this.lineTo(x + width - cornerRadius.upperRight, y);
+	this.quadraticCurveTo(x + width, y, x + width, y + cornerRadius.upperRight);
+	this.lineTo(x + width, y + height - cornerRadius.lowerRight);
+	this.quadraticCurveTo(x + width, y + height, x + width - cornerRadius.lowerRight, y + height);
+	this.lineTo(x + width / 2 - 10, y + height);
+	this.lineTo(x + width / 2, y + height + 10);
+	this.lineTo(x + width / 2 + 10, y + height);
+	this.lineTo(x + cornerRadius.lowerLeft, y + height);
+	this.quadraticCurveTo(x, y + height, x, y + height - cornerRadius.lowerLeft);
 	this.lineTo(x, y + cornerRadius.upperLeft);
 	this.quadraticCurveTo(x, y, x + cornerRadius.upperLeft, y);
 	this.closePath();

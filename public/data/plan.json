@@ -1,0 +1,30 @@
+{
+	"title": "CRONOGRAMA DE CERVEJA",
+	"width": 1200,
+	"heatingReasonDPM_UP": "2:1",
+	"heatingReasonDPM_DOWN": "1:5",
+	"theme": {"backgroundColor": "white", "plotAreaBackgroundColor": "rgba(200,255,255,0.1)", "titleColor": "black"},
+	"plan": {
+		"mash": {
+			"type": "single",
+			"ramps": [
+				{"step": "Liberação Enzimática", "temperature": 55, "time": 30, "waterL": 20, "grainKg": 5},
+				{"step": "Liberação Proteica", "temperature": 68, "time": 30},
+				{"step": "Mash-out", "temperature": 78, "time": 15, "waterL": 20, "hopMg": 5, "spiceMg": 10}
+			]
+		},
+		"boiling": {
+			"temperature": 100,
+			"time": 60,
+			"waterL": 5,
+			"spiceMg": 5,
+			"grainKg": 1,
+			"hopping": [
+				{"hopName": "Cascade", "type": "Bitternes", "time": 5, "amountMg": 15},
+				{"hopName": "Cascade", "type": "FLavor", "time": 45, "amountMg": 15},
+				{"hopName": "Simcoe", "type": "FLavor", "time": 50, "amountMg": 15},
+				{"hopName": "Amarilo", "type": "FLavor", "time": 55, "amountMg": 15}
+			]
+		}
+	}
+}
