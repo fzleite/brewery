@@ -18,6 +18,13 @@ export default function PlantMonitor() {
 		water_h: new Image(),
 		water_v: new Image(),
 	};
+	let cutAtPictures = {
+		valve1: 0,
+		valve2: 0,
+		resistenciaCaldeira: 0,
+		resistenciaPanela: 0,
+		motorBomba: 0,
+	};
 
 	/**
 	 * Sets the context of the canvas
@@ -71,32 +78,24 @@ export default function PlantMonitor() {
 		valvularDirecional_2 = new controlComponent({id: 'Valvula Direcional 2', speed: 40});
 		motorBomba = new controlComponent({id: 'Bomba de Recirculação', speed: 80});
 
-		ctx.clearRect(0, 0, 600, 648);
-		ctx.drawImage(pictures.basePlant, 0, 0);
-
 		resistenciaPrincipal.onDraw((comp) => {
 			let cutAt = 0;
 			switch (comp.getStatus()) {
 				case 'on':
 					cutAt = comp.getInternalFlag() == 'on' ? 100 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.clearRect(120, 540, 100, 22);
-					ctx.drawImage(pictures.resistenciaPanela, cutAt, 0, 100, 22, 119, 540, 100, 22);
 					break;
 				case 'off':
 					cutAt = 0;
-					ctx.clearRect(120, 540, 100, 22);
-					ctx.drawImage(pictures.resistenciaPanela, cutAt, 0, 100, 22, 119, 540, 100, 22);
 					break;
 				case 'manual':
 					cutAt = comp.getInternalFlag() == 'on' ? 200 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.clearRect(120, 540, 100, 22);
-					ctx.drawImage(pictures.resistenciaPanela, cutAt, 0, 100, 22, 119, 540, 100, 22);
 					break;
 				default:
 					break;
 			}
+			cutAtPictures.resistenciaPanela = cutAt;
 		});
 
 		resistenciaCaldeira.onDraw((comp) => {
@@ -105,20 +104,18 @@ export default function PlantMonitor() {
 				case 'on':
 					cutAt = comp.getInternalFlag() == 'on' ? 22 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.resistenciaCaldeira, cutAt, 0, 22, 100, 322, 474, 22, 100);
 					break;
 				case 'off':
 					cutAt = 0;
-					ctx.drawImage(pictures.resistenciaCaldeira, cutAt, 0, 22, 100, 322, 474, 22, 100);
 					break;
 				case 'manual':
 					cutAt = comp.getInternalFlag() == 'on' ? 44 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.resistenciaCaldeira, cutAt, 0, 22, 100, 322, 474, 22, 100);
 					break;
 				default:
 					break;
 			}
+			cutAtPictures.resistenciaCaldeira = cutAt;
 		});
 
 		valvularDirecional_1.onDraw((comp) => {
@@ -127,20 +124,18 @@ export default function PlantMonitor() {
 				case 'on':
 					cutAt = comp.getInternalFlag() == 'on' ? 35 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.valve, cutAt, 0, 35, 35, 8, 403, 35, 35);
 					break;
 				case 'off':
 					cutAt = 0;
-					ctx.drawImage(pictures.valve, cutAt, 0, 35, 35, 8, 403, 35, 35);
 					break;
 				case 'manual':
 					cutAt = comp.getInternalFlag() == 'on' ? 70 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.valve, cutAt, 0, 35, 35, 8, 403, 35, 35);
 					break;
 				default:
 					break;
 			}
+			cutAtPictures.valve1 = cutAt;
 		});
 
 		valvularDirecional_2.onDraw((comp) => {
@@ -149,20 +144,18 @@ export default function PlantMonitor() {
 				case 'on':
 					cutAt = comp.getInternalFlag() == 'on' ? 35 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.valve, cutAt, 0, 35, 35, 154.5, 602, 35, 35);
 					break;
 				case 'off':
 					cutAt = 0;
-					ctx.drawImage(pictures.valve, cutAt, 0, 35, 35, 50, 603, 35, 35);
 					break;
 				case 'manual':
 					cutAt = comp.getInternalFlag() == 'on' ? 70 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.valve, cutAt, 0, 35, 35, 50, 603, 35, 35);
 					break;
 				default:
 					break;
 			}
+			cutAtPictures.valve2 = cutAt;
 		});
 
 		motorBomba.onDraw((comp) => {
@@ -171,20 +164,18 @@ export default function PlantMonitor() {
 				case 'on':
 					cutAt = comp.getInternalFlag() == 'on' ? 35 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.motorBomba, cutAt, 0, 35, 35, 7, 601, 35, 35);
 					break;
 				case 'off':
 					cutAt = 0;
-					ctx.drawImage(pictures.motorBomba, cutAt, 0, 35, 35, 7, 601, 35, 35);
 					break;
 				case 'manual':
 					cutAt = comp.getInternalFlag() == 'on' ? 70 : 0;
 					comp.setInternalFlag(comp.getInternalFlag() == 'on' ? 'off' : 'on');
-					ctx.drawImage(pictures.motorBomba, cutAt, 0, 35, 35, 7, 601, 35, 35);
 					break;
 				default:
 					break;
 			}
+			cutAtPictures.motorBomba = cutAt;
 		});
 
 		subscribe(resistenciaPrincipal);
@@ -207,41 +198,77 @@ export default function PlantMonitor() {
 	let cutAtWaterDown = 42;
 	let waterSpeed = 10;
 	let speedCount = 0;
+	let potWaterLevel = 358;
+	let caldeiraLevel = 308;
+
 	const draw = () => {
+		ctx.fillStyle = 'rgba(255,255,255,1)';
+		ctx.fillRect(80, 308, 275, 282);
+
+		ctx.fillStyle = 'rgba(255,192,0,1)';
+		ctx.fillRect(80, potWaterLevel, 180, 272);
+
+		ctx.fillStyle = 'rgba(100,150,255,0.2)';
+		ctx.fillRect(280, caldeiraLevel, 80, 272);
+
+		potWaterLevel = potWaterLevel < 358 + 222 ? potWaterLevel + 1 : 358;
+		caldeiraLevel = caldeiraLevel < 358 + 222 ? caldeiraLevel + 1 : 358;
+
+		ctx.drawImage(pictures.basePlant, 0, 0);
+
+		ctx.font = 'bold 30px Arial';
+		ctx.fillStyle = 'rgba(255,0,0,1)';
+		ctx.textAlign = 'center';
+		ctx.fillText(`55°`, 175, 520);
+		ctx.fillText(`55°`, 320, 380);
+
+		// *********************************
+		// Draw the components
+		ctx.drawImage(pictures.resistenciaPanela, cutAtPictures.resistenciaPanela, 0, 100, 22, 119, 540, 100, 22);
+		ctx.drawImage(pictures.resistenciaCaldeira, cutAtPictures.resistenciaCaldeira, 0, 22, 100, 322, 474, 22, 100);
+		ctx.drawImage(pictures.valve, cutAtPictures.valve1, 0, 35, 35, 8, 403, 35, 35);
+		ctx.drawImage(pictures.valve, cutAtPictures.valve2, 0, 35, 35, 154.5, 602, 35, 35);
+		ctx.drawImage(pictures.motorBomba, cutAtPictures.motorBomba, 0, 35, 35, 7, 601, 35, 35);
+
+		// *********************************
+		// Draw the water flow
+		// *********************************
+		ctx.clearRect(22, 438, 7, 164);
+		ctx.drawImage(pictures.water_v, cutAtWaterUp, 0, 7, 164, 22, 438, 7, 164);
+
+		ctx.clearRect(22, 278, 7, 124);
+		ctx.drawImage(pictures.water_v, cutAtWaterUp, 0, 7, 124, 22, 278, 7, 124);
+
+		ctx.clearRect(99, 277, 7, 50);
+		ctx.drawImage(pictures.water_v, cutAtWaterDown, 0, 7, 50, 99, 277, 7, 50);
+
+		ctx.clearRect(168, 573, 7, 29);
+		ctx.drawImage(pictures.water_v, cutAtWaterDown, 0, 7, 29, 168, 573, 7, 29);
+
+		ctx.clearRect(316, 588, 7, 36);
+		ctx.drawImage(pictures.water_v, cutAtWaterDown, 0, 7, 36, 316, 588, 7, 36);
+
+		// Horizontal water
+		ctx.clearRect(30, 277, 67, 7);
+		ctx.drawImage(pictures.water_h, 0, cutAtWaterUp, 67, 7, 30, 277, 67, 7);
+
+		//ctx.color = 'red';
+		ctx.clearRect(43, 418, 45, 7);
+		ctx.drawImage(pictures.water_h, 0, cutAtWaterUp, 45, 7, 43, 418, 45, 7);
+
+		ctx.clearRect(43, 616.5, 110, 7);
+		ctx.drawImage(pictures.water_h, 0, cutAtWaterDown, 110, 7, 43, 616.6, 110, 7);
+
+		ctx.clearRect(190, 616.5, 125, 7);
+		ctx.drawImage(pictures.water_h, 0, cutAtWaterDown, 125, 7, 190, 616.5, 125, 7);
+		//ctx.drawImage(pictures.water_h, 0, cutAtWaterUp, 67, 7, 30, 277, 67, 7);
+
 		if (speedCount % waterSpeed == 0) {
-			ctx.clearRect(22, 438, 7, 164);
-			ctx.drawImage(pictures.water_v, cutAtWaterUp, 0, 7, 164, 22, 438, 7, 164);
-
-			ctx.clearRect(22, 278, 7, 124);
-			ctx.drawImage(pictures.water_v, cutAtWaterUp, 0, 7, 124, 22, 278, 7, 124);
-
-			ctx.clearRect(99, 277, 7, 50);
-			ctx.drawImage(pictures.water_v, cutAtWaterDown, 0, 7, 50, 99, 277, 7, 50);
-
-			ctx.clearRect(168, 573, 7, 29);
-			ctx.drawImage(pictures.water_v, cutAtWaterDown, 0, 7, 29, 168, 573, 7, 29);
-
-			ctx.clearRect(316, 588, 7, 36);
-			ctx.drawImage(pictures.water_v, cutAtWaterDown, 0, 7, 36, 316, 588, 7, 36);
-
-			// Horizontal water
-			ctx.clearRect(30, 277, 67, 7);
-			ctx.drawImage(pictures.water_h, 0, cutAtWaterUp, 67, 7, 30, 277, 67, 7);
-
-			//ctx.color = 'red';
-			ctx.clearRect(43, 418, 45, 7);
-			ctx.drawImage(pictures.water_h, 0, cutAtWaterUp, 45, 7, 43, 418, 45, 7);
-
-			ctx.clearRect(43, 616.5, 110, 7);
-			ctx.drawImage(pictures.water_h, 0, cutAtWaterDown, 110, 7, 43, 616.6, 110, 7);
-
-			ctx.clearRect(190, 616.5, 125, 7);
-			ctx.drawImage(pictures.water_h, 0, cutAtWaterDown, 125, 7, 190, 616.5, 125, 7);
-			//ctx.drawImage(pictures.water_h, 0, cutAtWaterUp, 67, 7, 30, 277, 67, 7);
-
 			cutAtWaterUp = cutAtWaterUp == 35 ? 0 : cutAtWaterUp + 7;
 			cutAtWaterDown = cutAtWaterDown == 0 ? 35 : cutAtWaterDown - 7;
 		}
+
+		// *********************************
 
 		notifyAll();
 		requestAnimationFrame(draw);
